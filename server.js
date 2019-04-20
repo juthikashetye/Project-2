@@ -19,7 +19,12 @@ app.use(bodyParser.json());
 
 app.use(express.static("public"));
 
-app.use(session({ secret: 'app', cookie: { maxAge: 1*1000*60*60*24*365 }}));
+app.use(session({
+  secret: 'app',
+  cookie: {
+    maxAge: 1 * 1000 * 60 * 60 * 24 * 365
+  }
+}));
 
 app.use(cparser());
 
@@ -47,7 +52,6 @@ if (process.env.JAWSDB_URL) {
 //   database: 'quiz_app'
 // });
 
-
 connection.connect();
 
 app.get('/teams', function(req, res) {
@@ -71,6 +75,25 @@ app.get('/categories', function(req, res) {
   });
 });
 
+app.get('/level-cats', function(req, res) {
+
+  const lvlCat = `SELECT levels.id AS Level_Id,
+                  GROUP_CONCAT(
+                    CONCAT_WS(',',categories.id, categories.category_name)SEPARATOR '; '
+                      ) AS Categories
+                  FROM levels
+                  LEFT JOIN category_levels
+                  ON levels.id = category_levels.level_id
+                  LEFT JOIN categories
+                  ON category_levels.category_id = categories.id
+                  GROUP BY levels.id`
+
+  connection.query(lvlCat, function(error, results, fields) {
+    if (error) res.send(error)
+    else res.json(results);
+  });
+});
+
 // app.get('/questions', function(req, res) {
 //   connection.query('SELECT * FROM questions', function(error, results, fields) {
 //     if (error) res.send(error)
@@ -79,27 +102,28 @@ app.get('/categories', function(req, res) {
 // });
 
 app.post('/questions', function(req, res) {
-  connection.query('SELECT answers.question_id, questions.question, solutions.correct_ans_id, '+
-    'GROUP_CONCAT(answers.option_name ORDER BY answers.id SEPARATOR ", ") as options,'+
-    ' GROUP_CONCAT(answers.id ORDER BY answers.id SEPARATOR ", ") as answer_id FROM answers '+
-    'LEFT JOIN questions on questions.id=answers.question_id LEFT JOIN solutions on solutions.question_id=questions.id'+
-    ' WHERE category_levels_id IN (SELECT id FROM category_levels WHERE category_id=? AND level_id=?) GROUP BY answers.question_id,'+
-    ' solutions.correct_ans_id;', [req.body.cat_id, req.body.level_id], function(error, results, fields) {
-    if (error) res.send(error)
-    else {
-      var resArr = []
-      for (var m = 0; m < results.length; m++) {
-        var rJSON = {}
-        rJSON["qid"] = results[m].question_id
-        rJSON["question"] = results[m].question
-        rJSON["sid"] = results[m].correct_ans_id
-        rJSON["options"] = results[m].options.split(", ")
-        rJSON["aid"] = results[m].answer_id.split(", ")
-        resArr.push(rJSON)
-      }
-      res.json(resArr)
-    };
-  });
+  connection.query('SELECT answers.question_id, questions.question, solutions.correct_ans_id, ' +
+    'GROUP_CONCAT(answers.option_name ORDER BY answers.id SEPARATOR ", ") as options,' +
+    ' GROUP_CONCAT(answers.id ORDER BY answers.id SEPARATOR ", ") as answer_id FROM answers ' +
+    'LEFT JOIN questions on questions.id=answers.question_id LEFT JOIN solutions on solutions.question_id=questions.id' +
+    ' WHERE category_levels_id IN (SELECT id FROM category_levels WHERE category_id=? AND level_id=?) GROUP BY answers.question_id,' +
+    ' solutions.correct_ans_id;', [req.body.cat_id, req.body.level_id],
+    function(error, results, fields) {
+      if (error) res.send(error)
+      else {
+        var resArr = []
+        for (var m = 0; m < results.length; m++) {
+          var rJSON = {}
+          rJSON["qid"] = results[m].question_id
+          rJSON["question"] = results[m].question
+          rJSON["sid"] = results[m].correct_ans_id
+          rJSON["options"] = results[m].options.split(", ")
+          rJSON["aid"] = results[m].answer_id.split(", ")
+          resArr.push(rJSON)
+        }
+        res.json(resArr)
+      };
+    });
 });
 
 app.get('/answers', function(req, res) {
@@ -111,10 +135,14 @@ app.get('/answers', function(req, res) {
 
 app.post('/sign-up', function(req, res) {
   var pass = md5(req.body.password)
-  connection.query('INSERT INTO users (username, password, role, team_id, user_score) VALUES (?,?,?,?,?)', [req.body.name, pass, 0, req.body.team, 0],  function(error, results, fields) {
-    if (error) res.send({error : error})
+  connection.query('INSERT INTO users (username, password, role, team_id, user_score) VALUES (?,?,?,?,?)', [req.body.name, pass, 0, req.body.team, 0], function(error, results, fields) {
+    if (error) res.send({
+      error: error
+    })
     // else res.json({id : results.insertId});
-    else res.json({id : results.insertId.toString()});
+    else res.json({
+      id: results.insertId.toString()
+    });
   });
 });
 
@@ -128,39 +156,46 @@ app.post('/availability', function(req, res) {
       if (results.length > 0) {
         av = 0
       }
-      res.json({ availability : av })
+      res.json({
+        availability: av
+      })
     }
   });
 });
 
-app.put('/score-update/:id', function(req, res){
-    connection.query('UPDATE users SET user_score = user_score + ? WHERE id = ?', [req.body.user_score, req.params.id],function (error, results, fields) {
-      
-      if (error) res.send(error)
-      else res.json(results);
-    
-    });
+app.put('/score-update/:id', function(req, res) {
+  connection.query('UPDATE users SET user_score = user_score + ? WHERE id = ?', [req.body.user_score, req.params.id], function(error, results, fields) {
+
+    if (error) res.send(error)
+    else res.json(results);
+
   });
+});
 
 app.post('/login', function(req, res) {
   var pass = md5(req.body.password)
-  connection.query('SELECT u.id, u.username, u.password, u.role, u.team_id, u.user_score, t.team_name FROM '+
-    'users u LEFT JOIN teams t ON u.team_id=t.id WHERE username=? AND password=?', 
-    [req.body.name, pass],  function(error, results, fields) {
-    if (error) res.send({error : error})
-    // else res.json({id : results.insertId});
-    else if (results.length == 0) {
-        res.json({message: "Username and Password doesn't match!"})
-    } else {
+  connection.query('SELECT u.id, u.username, u.password, u.role, u.team_id, u.user_score, t.team_name FROM ' +
+    'users u LEFT JOIN teams t ON u.team_id=t.id WHERE username=? AND password=?',
+    [req.body.name, pass],
+    function(error, results, fields) {
+      if (error) res.send({
+        error: error
+      })
+      // else res.json({id : results.insertId});
+      else if (results.length == 0) {
+        res.json({
+          message: "Username and Password doesn't match!"
+        })
+      } else {
         req.session.uname = results[0].username
         req.session.uid = results[0].id
         req.session.tid = results[0].team_id
-        req.session.tname= results[0].team_name
+        req.session.tname = results[0].team_name
         req.session.uscore = results[0].user_score
         //console.log(results)
         res.json(results);
       }
-  });
+    });
 });
 
 //gets all users and their ranks with same rank for tied scores
@@ -172,14 +207,14 @@ app.get('/all-user-ranks', function(req, res) {
                     ) user_rank
                     FROM users`
 
-  connection.query(allRanks,function(error, results, fields) {
+  connection.query(allRanks, function(error, results, fields) {
     if (error) res.send(error)
     else res.json(results);
   });
 });
 
 //gets current user's rank
-app.get('/user-rank/:user_id',function(req, res) {
+app.get('/user-rank/:user_id', function(req, res) {
 
   const userRank = `SELECT id,name,score,user_rank 
                     FROM (
@@ -191,7 +226,7 @@ app.get('/user-rank/:user_id',function(req, res) {
                     ) rankingTable 
                     WHERE id = ?`
 
-  connection.query(userRank,[req.params.user_id],function(error, results, fields) {
+  connection.query(userRank, [req.params.user_id], function(error, results, fields) {
     if (error) res.send(error)
     else res.send(results[0]);
   });
@@ -200,7 +235,7 @@ app.get('/user-rank/:user_id',function(req, res) {
 //displays teams rankwise and no. of players per team
 app.get('/team-ranks', function(req, res) {
 
-  const teamRanks =`SELECT DENSE_RANK() OVER (
+  const teamRanks = `SELECT DENSE_RANK() OVER (
                     ORDER BY SUM(user_score) DESC
                     ) Team_Rank,
                     teams.team_name AS Team_Name, 
@@ -213,14 +248,14 @@ app.get('/team-ranks', function(req, res) {
                     GROUP BY users.team_id
                     ORDER BY SUM(user_score) DESC`
 
-  connection.query(teamRanks,function(error, results, fields) {
+  connection.query(teamRanks, function(error, results, fields) {
     if (error) res.send(error)
     else res.json(results);
   });
 });
 
 //gets current user's team's rank
-app.get('/team-rank/:user_id',function(req, res) {
+app.get('/team-rank/:user_id', function(req, res) {
 
   const userTeamRank = `SELECT users.id , teamRanks.Team_Rank FROM users LEFT JOIN(
                         SELECT DENSE_RANK() OVER (
@@ -236,7 +271,7 @@ app.get('/team-rank/:user_id',function(req, res) {
                         ON users.team_id = teamRanks.Team_ID
                         WHERE users.id = ?`
 
-  connection.query(userTeamRank,[req.params.user_id],function(error, results, fields) {
+  connection.query(userTeamRank, [req.params.user_id], function(error, results, fields) {
     if (error) res.send(error)
     else res.send(results[0]);
   });
@@ -245,7 +280,7 @@ app.get('/team-rank/:user_id',function(req, res) {
 //gets all teams' scores
 app.get('/team-score', function(req, res) {
 
-  const q =`SELECT users.team_id AS Team_Id, 
+  const q = `SELECT users.team_id AS Team_Id, 
             teams.team_name AS Team_Name, 
             SUM(user_score) AS Team_Score
             FROM users
@@ -254,7 +289,7 @@ app.get('/team-score', function(req, res) {
             GROUP BY users.team_id
             ORDER BY SUM(user_score) DESC`;
 
-  connection.query(q,function(error, results, fields) {
+  connection.query(q, function(error, results, fields) {
     if (error) res.send(error)
     else res.json(results);
   });
@@ -266,12 +301,12 @@ app.get('/redirect-login', function(req, res) {
 
 app.get('/get-session', function(req, res) {
   console.log(req.session.uname)
-  res.send([req.session.uname,req.session.uid,req.session.tid,req.session.tname,req.session.uscore])
+  res.send([req.session.uname, req.session.uid, req.session.tid, req.session.tname, req.session.uscore])
 });
 
-app.get('/logout', function(req, res){
+app.get('/logout', function(req, res) {
   req.session.destroy(function(err) {
-     res.send('index.html')
+    res.send('index.html')
   })
 })
 
