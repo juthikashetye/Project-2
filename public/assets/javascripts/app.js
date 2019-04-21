@@ -69,7 +69,7 @@ var num
 var teamName 
 
 //user score
-var globalScore
+var globalScore = 0
 
 $(document).ready(function() {
 
@@ -82,13 +82,13 @@ $(document).ready(function() {
     //will be used for team_id in users table
     userTeamId = $("input[name='teamName']:checked").val();
 
-    console.log(userTeamId);
+    //console.log(userTeamId);
 
   });
 
   //button for clicking submit for answers
   $('#update_score').on("click",function(e) {
-    console.log("hello")
+    //console.log("hello")
     updateUserScore(globalUserId);
 
   });
@@ -129,7 +129,7 @@ $(document).on("click", 'button', function(e) {
       ind = 0
       secs = "10"
       qshowed = 0
-      $(".timer").addClass("dispHide")
+      $(".timer").css("visibility","hidden")
       loadLevelsAndCategories();
     break;
     case "submit":
@@ -150,8 +150,9 @@ $(document).on("click", 'button', function(e) {
       getQuestions(selectedLevel.split("level")[0],selectedCatValue)
     break;
     case "no":
-      $(".timer").addClass("dispHide")
+      $(".timer").css("visibility","hidden")
       $("#levelContainer").empty().load("quizResults.html",function() {
+        gameScore = 0;
         showResults(0)
       })
     break;
@@ -175,9 +176,9 @@ $(document).on("keypress",function(event){
  #  FUNCTION NAME : getTeams
  #  AUTHOR        : Juthika Shetye
  #  DATE          : 
- #  MODIFIED BY   : 
- #  REVISION DATE : 
- #  REVISION #    : 
+ #  MODIFIED BY   : Maricel Louise Sumulong
+ #  REVISION DATE : April 19, 2019 PDT
+ #  REVISION #    : 1
  #  DESCRIPTION   : retrieves team information from the database
  #  PARAMETERS    : none
  #
@@ -190,6 +191,10 @@ function getTeams() {
     url: "/teams",
     method: 'GET'
   }).then(function(t) {
+
+    $("#teamsDiv").empty()
+
+    var sel = 0
 
     for (var teamIndex in t) {
 
@@ -209,6 +214,13 @@ function getTeams() {
         .attr("class", "tRadio")
         .attr("value", t[teamIndex].id);
 
+      if (sel == 0) {
+        teamRadio.attr("checked","checked")
+        sel = 1
+      }
+
+
+
       $("#teamsDiv").append(teamRadio);
       $("#teamsDiv").append(teamLabel);
 
@@ -224,9 +236,9 @@ function getTeams() {
  #  FUNCTION NAME : getLevels
  #  AUTHOR        : Juthika Shetye
  #  DATE          : 
- #  MODIFIED BY   : Juthika Shetye
- #  REVISION DATE : April 11, 2019 PDT
- #  REVISION #    : 2
+ #  MODIFIED BY   : Maricel Louise Sumulong
+ #  REVISION DATE : April 20, 2019 PDT
+ #  REVISION #    : 3
  #  DESCRIPTION   : retrieves level information from the database
  #  PARAMETERS    : none
  #
@@ -236,14 +248,16 @@ function getTeams() {
 function getLevels() {
 
   $.ajax({
-    url: "/levels",
+    url: "/level-cats",
     method: 'GET'
   }).then(function(l) {
+
+    // console.log(l)
 
     for (var levelIndex in l) {
 
       //made var levelNum for creating unique id
-      levelNum = l[levelIndex].id + "level" + levelIndex
+      levelNum = l[levelIndex].Level_Id + "level" + levelIndex
 
       levelPara = $("<p>");
 
@@ -252,7 +266,9 @@ function getLevels() {
         .attr("id", levelNum);
 
       $("#topicsDiv").append(levelPara);
-      getCategories(levelNum);
+      var cats = l[levelIndex].Categories.split("; ")
+      getCategories(levelNum,cats);
+  
     }
   
   });
@@ -265,44 +281,39 @@ function getLevels() {
  #  AUTHOR        : Juthika Shetye
  #  DATE          : 
  #  MODIFIED BY   : Maricel Louise Sumulong
- #  REVISION DATE : April 15, 2019 PDT
- #  REVISION #    : 4
+ #  REVISION DATE : April 20, 2019 PDT
+ #  REVISION #    : 5
  #  DESCRIPTION   : retrieves category information from the database
- #  PARAMETERS    : level id
+ #  PARAMETERS    : level id, category array
  #
  #######################################################################
 */
 
-function getCategories(lid) {
+function getCategories(lid, c) {
 
-  $.ajax({
-    url: "/categories",
-    method: 'GET'
-  }).then(function(c) {
+  for (var i = 0; i < c.length; i++) {
 
-    for (var i = 0; i < c.length; i++) {
+    var id = c[i].split(",")[0]
+    var name = c[i].split(",")[1]
+    var catNum = lid+"cat-"+id
 
-      var catNum = lid+"cat-"+c[i].id
+    catLabel = $("<label>");
+    catRadio = $("<input>");
 
-      catLabel = $("<label>");
-      catRadio = $("<input>");
+    catLabel.attr("for", catNum)
+      .attr("class", "catLabel")
+      .html(name);
 
-      catLabel.attr("for", catNum)
-        .attr("class", "catLabel")
-        .html(c[i].category_name);
+    catRadio.attr("type", "radio")
+      .attr("name", "category")
+      .attr("id", catNum)
+      .attr("class", "cat")
+      .attr("value", id);
 
-      catRadio.attr("type", "radio")
-        .attr("name", "category")
-        .attr("id", catNum)
-        .attr("class", "cat")
-        .attr("value", c[i].id);
-
-      $("#"+lid).append(catRadio);
-      $("#"+lid).append(catLabel);
-    
-    }
-
-  });
+    $("#"+lid).append(catRadio);
+    $("#"+lid).append(catLabel);
+  
+  }
 
 }
 
@@ -417,7 +428,6 @@ function loginSignUp(flag) {
                 userTeamId = c.team_id
                 globalName = c.username
                 globalUserId = c.id
-                globalScore = c.user_score
                 teamName = c.team_name
                 login()
               }
@@ -452,9 +462,9 @@ function teamScore(){
   }).then(function(sum){
 
     for (var i = 0; i < sum.length; i++) {
-      console.log("Total score of " + sum[i].Team_Name +
-                   " with ID " + sum[i].Team_Id + 
-                   " is : " + sum[i].Team_Score);
+      // console.log("Total score of " + sum[i].Team_Name +
+      //              " with ID " + sum[i].Team_Id + 
+      //              " is : " + sum[i].Team_Score);
     }
     
   });
@@ -497,9 +507,9 @@ function userRanks(){
   }).then(function(ranks){
 
     for (var i = 0; i < ranks.length; i++) {
-      console.log("Rank of " + ranks[i].username + " with ID " + 
-              ranks[i].id + " and score " + ranks[i].user_score + 
-                   " is : " + ranks[i].user_rank);
+      // console.log("Rank of " + ranks[i].username + " with ID " + 
+      //         ranks[i].id + " and score " + ranks[i].user_score + 
+      //              " is : " + ranks[i].user_rank);
 
       var userTr = $('<tr>');
       var userTdTeam = $('<td>').text(ranks[i].username);
@@ -578,7 +588,7 @@ function currUserTeamRank(id){
   }).done(function(tr){
 
     //returns user's id and team's rank
-    console.log(tr);
+    //console.log(tr);
     
     trank = tr;
 
@@ -659,7 +669,7 @@ function teamRanks(){
   }).then(function(t){
 
     for (var i = 0; i < t.length; i++) {
-      console.log("Team Ranks " , t[i]);
+      //console.log("Team Ranks " , t[i]);
 
       var tr = $('<tr>');
       var tdTeam = $('<td>').text(t[i].Team_Name);
@@ -696,7 +706,7 @@ function teamRanks(){
 function testingFunctions() {
 
   //fetching results.insertId / last inserted user_id
-    console.log("User ID: " + globalUserId);
+    //console.log("User ID: " + globalUserId);
 
     //displays all teams and their total scores
     teamScore();
@@ -807,8 +817,8 @@ function login() {
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : April 14, 2019 PDT
  #  MODIFIED BY   : Maricel Louise Sumulong
- #  REVISION DATE : April 18, 2019 PDT
- #  REVISION #    : 5
+ #  REVISION DATE : April 20, 2019 PDT
+ #  REVISION #    : 7
  #  DESCRIPTION   : retrieves user information
  #  PARAMETERS    : flag, callback
  #
@@ -827,12 +837,12 @@ function getSessionInfo(flag,callback) {
       globalName = c[0]
       userTeamId = c[2]
       teamName = c[3]
-      globalScore = c[4]
+      //globalScore = c[4]
 
       switch (flag) {
         case 1: 
           if (globalUserId == null) {
-            window.location.href="index.html"
+            window.location.href="../../index.html"
           } else {
               //$("#currUser").empty().append(globalName);
               $(".usernameDropdown").text(globalName)
@@ -850,7 +860,7 @@ function getSessionInfo(flag,callback) {
             //window.location.href="index.html"
           } else {
               //$("#currUser").empty().append(globalName);
-              window.location.href="main.html"
+              window.location.href="./assets/html/main.html"
               if (callback != undefined)
                 callback()
             }
@@ -867,9 +877,9 @@ function getSessionInfo(flag,callback) {
  #  FUNCTION NAME : loadLevelsAndCategories
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : April 15, 2019 PDT
- #  MODIFIED BY   : 
- #  REVISION DATE : 
- #  REVISION #    : 
+ #  MODIFIED BY   : Maricel Louise Sumulong
+ #  REVISION DATE : April 20, 2019 PDT
+ #  REVISION #    : 1
  #  DESCRIPTION   : loads levels and category page
  #  PARAMETERS    : none
  #
@@ -952,9 +962,9 @@ function getQuestions(lid, cid) {
  #  FUNCTION NAME : createQuestions
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : April 16, 2019 PDT
- #  MODIFIED BY   : 
- #  REVISION DATE : 
- #  REVISION #    : 
+ #  MODIFIED BY   : Maricel Louise Sumulong
+ #  REVISION DATE : April 20, 2019 PDT
+ #  REVISION #    : 2
  #  DESCRIPTION   : creates the questions elements
  #  PARAMETERS    : json data, callback function
  #
@@ -1144,8 +1154,8 @@ function runTimer() {
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : April 16, 2019 PDT
  #  MODIFIED BY   : Maricel Louise Sumulong
- #  REVISION DATE : April 18, 2019 PDT
- #  REVISION #    : 2
+ #  REVISION DATE : April 19, 2019 PDT
+ #  REVISION #    : 3
  #  DESCRIPTION   : check if the selected answer is correct or wrong
  #  PARAMETERS    : radio button
  #
@@ -1170,8 +1180,8 @@ function checkAnswers(obj) {
       // console.log(gameScore)
     } else {
         $(obj).next().addClass("wrong_answer")
-        var a = $(obj)[0].parentElement.dataset.answer
-        // console.log(a)
+        var a = $(obj)[0].parentElement.parentElement.dataset.answer
+        //console.log(a)
         $("#option-"+a).next().addClass("correct_answer")
         $("#wrongAudio").trigger("play");
       }
@@ -1227,8 +1237,8 @@ function initializeRadioButtons() {
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : April 16, 2019 PDT
  #  MODIFIED BY   : Maricel Louise Sumulong
- #  REVISION DATE : April 18, 2019 PDT
- #  REVISION #    : 1
+ #  REVISION DATE : April 20, 2019 PDT
+ #  REVISION #    : 4
  #  DESCRIPTION   : initialize onclick functionality of the radiobuttons
  #  PARAMETERS    : flag
  #
@@ -1237,15 +1247,25 @@ function initializeRadioButtons() {
 
 function showResults(flag) {
 
-  $(".uscore").text(gameScore)
+  
   //console.log(getCurrUserRank(globalUserId))
+  // console.log("GAME SCORE: "+gameScore)
+  // console.log("GLOBALSCORE BEFORE: "+globalScore)
+  globalScore += gameScore
+  // console.log("GLOBALSCORE AFTER: "+globalScore)
+  //$(".tscore").text(gameScore)
   var b = getCurrUserRank(globalUserId)
-  $(".urank").text(b.user_rank)
+  $(".urank, .rankDropdown").text(b.user_rank)
   var y = currUserTeamRank(globalUserId)
   $(".teamRankDropdown").text(y.Team_Rank)
   $(".trank").text(y.Team_Rank)
-  if (flag == 1)
+  if (flag == 1) {
+    $(".uscore").text(gameScore)
     $("#resultsModal").modal("show")
+  } else {
+    $(".tscore").text(globalScore)
+    globalScore = 0  
+   }
 }
 
 /*
