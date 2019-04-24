@@ -8,9 +8,9 @@
 
 * Each question correctly answered adds random points to both your and your team's score. At the end of each game, you can see your score, rank and the overall ranking of your team. You can also checkout the Leaderboard to see the scores and rankings of all the players and teams.
 
-This game was developed as a project for the UC Berkeley Coding Bootcamp, San Francisco.
+* This game was developed as a project for the UC Berkeley Coding Bootcamp, San Francisco.
 
-## Packages Used
+## npm Packages Used
 
 * [Require](https://www.npmjs.com/package/require)
 
@@ -81,12 +81,12 @@ This game was developed as a project for the UC Berkeley Coding Bootcamp, San Fr
 
 ![The Application](public/assets/screenshots/triviosa.png)
 
-**_Voila!_**/ You now have Triviosa running in your browser!
+**_Voila!_** You now have Triviosa running in your browser!
 
 ## Credits
 
-www.flamingtext.com - for the logo images
+www.flamingtext.com - for logo images.
 
-www.orangefreesounds.com - for the sounds used for this game
+www.orangefreesounds.com - for sounds.
 
-https://www.triviaquestionss.com/ - for the questions used in the game
+https://www.triviaquestionss.com/ & http://laffgaff.com/ - for quiz questions.
