@@ -38,46 +38,47 @@
 
 ## Setting Up The Application
 
-### Cloning The App
-
-![Clone The App](public/assets/screenshots/download.png)
+* After cloning this repository on your computer follow the steps mentioned below to get your app working.
 
 ### Install The Packages Listed 
 
-* In your terminal, navigate to the Project-2 folder and run `npm install` (see Figure 1)
+* In your terminal, navigate to the Project-2 folder you just cloned and run `npm install` 
 
-* After running `npm install`, the packages listed above should be downloaded inside the `node_modules` folder.
+* After running `npm install`, the npm packages listed above should be downloaded inside the `node_modules` folder.
 
-* In case you don't see the packages in `node_modules`, use the package links mentioned above to manually install the required packages. (see Figure 2)
+* In case you don't see the packages in `node_modules`, use the package links mentioned above to manually install the required packages. (see Figure 1)
 
-![Installing Packages](public/assets/screenshots/packages.png)
-<p align="center" style="color:gray;font-size:12px;"><i>Figure 1: Package Installation</i></p>
-
-![Node Modules Folder](public/assets/screenshots/modules.png)
-<p align="center" style="color:gray;font-size:12px"><i>Figure 2: The yellow-lined modules are expected to be inside the node_modules folder for the app to work.</i></p>
+![Node Modules Folder](public/assets/screenshots/modules_cropped.png)
+<p align="center" style="color:gray;font-size:12px"><i>Figure 1: The yellow-lined modules are expected to be inside the node_modules folder for the app to work.</i></p>
 
 ### Building Your Database
 
 * In your terminal navigate inside the `db` folder. Then login to your **MySQL** connection
-* Once logged in, run `source schema.sql` followed by `source seeds.sql` (See Figures 4a and 4b)
+
+* Once logged in, run `source schema.sql` followed by `source seeds.sql` (See Figures 2a and 2b)
+
 * SQL Version required is 8.0 and up
 
 ![Creating The Database](public/assets/screenshots/schema.png)
-<p align="center" style="color:gray;font-size:12px;"><i>Figure 4a: source schema.sql</i></p>
+<p align="center" style="color:gray;font-size:12px;"><i>Figure 2a: source schema.sql</i></p>
 
 ![Creating The Database](public/assets/screenshots/seeds.png)
-<p align="center" style="color:gray;font-size:12px;"><i>Figure 4b: source seeds.sql</i></p>
+<p align="center" style="color:gray;font-size:12px;"><i>Figure 2b: source seeds.sql</i></p>
 
 ### Create Your `.env` File
 
-* Navigate back to Project-2 folder and create a `.env` file. Inside this file, provide your database credentials. (See Figure 5)
+* Navigate back to Project-2 folder and create a `.env` file. Inside this file, provide your database credentials. (See Figure 3)
 
 ![Inside Env](public/assets/screenshots/envFile.png)
-<p align="center" style="color:gray;font-size:12px;"><i>Figure 5: Information inside the .env file.</i></p>
+<p align="center" style="color:gray;font-size:12px;"><i>Figure 3: Information inside the .env file.</i></p>
 
 ### Running The App
 
-![Running The File](public/assets/screenshots/nodemon.png)
+* Navigate back to the main Project-2 folder and run `node server.js` or `nodemon server.js`
+
+![Running nodemon server.js](public/assets/screenshots/listening.png)
+
+* On your browser go to `http://localhost:3001`
 
 ![The Application](public/assets/screenshots/triviosa.png)
 
