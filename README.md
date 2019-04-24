@@ -86,8 +86,8 @@
 
 ## Credits
 
-www.flamingtext.com - for logo images.
+[Flaming Text](www.flamingtext.com) - for logo images.
 
-www.orangefreesounds.com - for sounds.
+[Orange Free Sounds](www.orangefreesounds.com) - for sounds.
 
-https://www.triviaquestionss.com/ & http://laffgaff.com/ - for quiz questions.
+[Trivia Questions](https://www.triviaquestionss.com/) & [Laff Gaff](http://laffgaff.com/) - for quiz questions.
